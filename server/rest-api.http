@@ -1,0 +1,39 @@
+POST http://localhost:3000/user/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "tim",
+  "password": "tim123321"
+}
+
+###
+@id = 65ba7cc563366dd208c0b680
+
+GET http://localhost:3000/teacher/{{id}}/courses
+Accept: application/json
+
+###
+@courseId = 65ba7cc563366dd208c0b684
+
+GET http://localhost:3000/teacher/{{id}}/courses/{{courseId}}/students
+Accept: application/json
+
+###
+GET http://localhost:3000/teacher/{{id}}/courses/{{courseId}}/students?score_upperbound=100
+Accept: application/json
+
+###
+
+###
+@studentId = 65af4143dbd8d1f4cba6b10a
+
+POST http://localhost:3000/teacher/{{id}}/courses/{{courseId}}/students/{{studentId}}/evaluations
+Accept: application/json
+Content-Type: application/json
+
+{
+  "result": 10,
+  "weight": 2,
+  "message": "Well done!"
+}
