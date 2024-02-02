@@ -5,13 +5,12 @@ const mongoose = require('mongoose');
 
 mongoose.set('strictQuery', true);
 const { MongoClient } = require('mongodb');
-const Task = require('../../models/taskModel');
 const User = require('../../models/userModel');
 
 const userService = require('../../services/userService');
 const { ValidationError } = require('../../middleware/error');
 
-const { users, tasks } = require('./data');
+const { users } = require('./data');
 
 let client = null;
 
@@ -20,7 +19,6 @@ beforeAll(async () => {
   await mongoose.connect(DATABASE_CONNECTION);
   client = new MongoClient(DATABASE_CONNECTION);
   await client.connect();
-  await Task.init();
   await User.init();
 });
 
@@ -32,9 +30,7 @@ afterAll(async () => {
 beforeEach(async () => {
   const database = client.db();
   await database.collection('users').drop();
-  await database.collection('tasks').drop();
   await database.collection('users').insertMany(users);
-  await database.collection('tasks').insertMany(tasks);
 });
 
 const validUnusedIds = [
@@ -61,7 +57,7 @@ describe('userService', () => {
     test.each(invalidIds)(
       'given a invalid id it should throw a ValidationError',
       async (id) => {
-        expect(async () => {
+        await expect(async () => {
           await userService.findById(id);
         }).rejects.toThrow(ValidationError);
       },

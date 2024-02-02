@@ -9,7 +9,7 @@ const { MongoClient } = require('mongodb');
 
 const User = require('../../models/userModel');
 
-const { users, tasks, usersIncludingPasswords } = require('./data');
+const { users, usersIncludingPasswords } = require('./data');
 
 let client = null;
 
@@ -29,16 +29,14 @@ afterAll(async () => {
 beforeEach(async () => {
   const database = client.db();
   await database.collection('users').deleteMany();
-  await database.collection('tasks').deleteMany();
   await database.collection('users').insertMany(users);
-  await database.collection('tasks').insertMany(tasks);
 });
 
 const validCredentialsNewUser = [
   { username: 'Unuseduser1', password: 'Unusedpassword1' },
   { username: 'Un2', password: 'aaAA__' },
-  { username: 'Unuseduser2', password: 'Unusedpassword1', roles: ['admin'] },
-  { username: 'Un2', password: 'aaAA__', roles: ['admin', 'user'] },
+  { username: 'Unuseduser2', password: 'Unusedpassword1', roles: ['teacher'] },
+  { username: 'Un2', password: 'aaAA__', roles: ['teacher', 'student'] },
 ];
 
 const invalidCredentialsUser = [
@@ -47,7 +45,7 @@ const invalidCredentialsUser = [
   { username: 'a', password: 'Wrongpassword2' },
   { username: 'Wronguser1', password: '.' },
   { username: 'Wronguser1', password: 'Wrongpassword1', roles: ['wrong'] },
-  { username: 'Wronguser1', password: 'Wrongpassword1', roles: ['admin', 'wrong'] },
+  { username: 'Wronguser1', password: 'Wrongpassword1', roles: ['teacher', 'wrong'] },
 ];
 
 describe('userModel', () => {
@@ -65,7 +63,7 @@ describe('userModel', () => {
     test.each(invalidCredentialsUser)(
       'given invalid credentials it should throw a ValidationError',
       async (credential) => {
-        expect(async () => {
+        await expect(async () => {
           const user = new User({ credential });
           await user.save();
         }).rejects.toThrow(mongoose.Error.ValidationError);

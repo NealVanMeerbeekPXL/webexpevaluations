@@ -8,7 +8,7 @@ async function findCoursesOfUser(id) {
   if (typeof id !== 'string' || !ObjectId.isValid(id)) {
     throw new ValidationError(`id ${id} is invalid`);
   }
-  return Course.find({ userId: id });//.select(['_id', 'name']);
+  return Course.find({ userId: id });
 }
 
 module.exports = { findCoursesOfUser };

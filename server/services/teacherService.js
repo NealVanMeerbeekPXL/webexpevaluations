@@ -4,42 +4,6 @@ const Course = require('../models/courseModel');
 
 const { ObjectId } = mongoose.Types;
 
-async function getStudentsWithScores(userId, courseId, lowerBound, upperBound) {
-  // const students = await Course.find({ teacherId: userId, _id: courseId }).populate('evaluations');
-
-  // return students.map((student) => {
-  //   const totalWeightedScore = student.evaluations.reduce((total, evaluation) => {
-  //     if (evaluation.result >= 0) {
-  //       return total + (evaluation.result * evaluation.weight);
-  //     }
-  //     return total;
-  //   }, 0);
-
-  //   const totalMaxScore = student.evaluations.reduce((total, evaluation) => {
-  //     if (evaluation.result >= 0) {
-  //       return total + (10 * evaluation.weight);
-  //     }
-  //     return total;
-  //   }, 0);
-
-  //   const percentageScore = (totalWeightedScore / totalMaxScore) * 100 || 0;
-
-  //   const roundedScore = Math.round(percentageScore);
-
-  //   // Filter students based on score range
-  //   if ((lowerBound && roundedScore >= lowerBound) || (upperBound && roundedScore <= upperBound)) {
-  //     return {
-  //       name: student.name,
-  //       score: roundedScore,
-  //       evaluations: student.evaluations,
-  //     };
-  //   }
-
-  //   return null;
-  // }).filter((student) => student !== null);
-  return test(userId, courseId, lowerBound, upperBound);
-}
-
 async function findStudentsOfCourse(userId, courseId, scoreLowerbound, scoreUpperbound) {
   if (typeof userId !== 'string' || !ObjectId.isValid(userId)) {
     throw new ValidationError(`id ${userId} is invalid`);
@@ -50,13 +14,18 @@ async function findStudentsOfCourse(userId, courseId, scoreLowerbound, scoreUppe
   if (scoreLowerbound === undefined && scoreUpperbound === undefined) {
     return Course
       .find({ _id: courseId, teacherId: userId })
+      .select(['_id', 'studentIds'])
       .populate('studentIds', ['_id', 'username']);
   }
-  return getStudentsWithScores(userId, courseId, scoreLowerbound, scoreUpperbound);
-}
-
-async function test(userId, courseId, scoreLowerbound, scoreUpperbound) {
-  return Course.aggregate([
+  const lowerBoundNumber = Number.parseInt(scoreLowerbound, 10);
+  const upperBoundNumber = Number.parseInt(scoreUpperbound, 10);
+  if (scoreLowerbound !== undefined && Number.isNaN(lowerBoundNumber)) {
+    throw new ValidationError(`scoreLowerbound ${scoreLowerbound} is invalid`);
+  }
+  if (scoreUpperbound !== undefined && Number.isNaN(upperBoundNumber)) {
+    throw new ValidationError(`scoreUpperbound ${scoreUpperbound} is invalid`);
+  }
+  const studentsWithGlobalGradesAggregatePipeline = [
     {
       $match: {
         _id: mongoose.Types.ObjectId(courseId),
@@ -76,10 +45,10 @@ async function test(userId, courseId, scoreLowerbound, scoreUpperbound) {
     {
       $project: {
         _id: 0,
-        courseName: '$name',
         students: {
+          id: '$student._id',
           username: '$student.username',
-          percentage: {
+          globalResult: {
             $round: {
               $cond: [
                 { $eq: ['$evaluations', []] },
@@ -129,7 +98,22 @@ async function test(userId, courseId, scoreLowerbound, scoreUpperbound) {
         },
       },
     },
-  ]);
+  ];
+  if (scoreLowerbound) {
+    studentsWithGlobalGradesAggregatePipeline.push({
+      $match: {
+        'students.globalResult': { $gte: lowerBoundNumber },
+      },
+    });
+  }
+  if (scoreUpperbound) {
+    studentsWithGlobalGradesAggregatePipeline.push({
+      $match: {
+        'students.globalResult': { $lte: upperBoundNumber },
+      },
+    });
+  }
+  return Course.aggregate(studentsWithGlobalGradesAggregatePipeline);
 }
 
 async function addEvaluationOfStudent(userId, courseId, studentId, evaluationData) {

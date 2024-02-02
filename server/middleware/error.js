@@ -4,7 +4,7 @@ const ValidationError = require('./validationError');
 const AuthorisationError = require('./authorisationError');
 const AuthenticationError = require('./authenticationError');
 
-function errorHandler(err, req, res) {
+function errorHandler(err, req, res, next) {
   let status = err.status || 500;
   const message = err.message || 'Something went wrong';
   if (err instanceof NotFoundError) {
@@ -17,6 +17,7 @@ function errorHandler(err, req, res) {
     status = 403;
   }
   res.status(status).json({ error: message });
+  next(err);
 }
 
 function routeNotFound(req, res, next) {

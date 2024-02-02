@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       minLength: 2,
-      maxLength: 20,
+      maxLength: 50,
       validate: {
         validator(value) {
           return /^[a-zA-Z0-9_]+$/.test(value);
