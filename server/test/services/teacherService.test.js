@@ -40,8 +40,5 @@ describe('teacherService', () => {
         }).rejects.toThrow(ValidationError);
       },
     );
-
-    it(
-      'given valid teacherId and courseId it should return the students of the course',
   });
 });
