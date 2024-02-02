@@ -3,14 +3,14 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "username": "tim",
-  "password": "tim123321"
+  "username": "bart",
+  "password": "bart123321"
 }
 
 ###
-@id = 65ba7cc563366dd208c0b680
+@id = 65ba7cc563366dd208c0b682
 
-GET http://localhost:3000/teacher/{{id}}/courses
+GET http://localhost:3000/student/{{id}}/courses
 Accept: application/json
 
 ###
@@ -37,3 +37,7 @@ Content-Type: application/json
   "weight": 2,
   "message": "Well done!"
 }
+
+###
+GET http://localhost:3000/student/{{id}}/courses/{{courseId}}/evaluations
+Accept: application/json
